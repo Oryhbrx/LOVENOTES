@@ -1,30 +1,24 @@
-// SIMPLE PASSWORDS (pwede mo palitan)
 const ADMIN_PASSWORD = "admin";
-const USER_PASSWORD = "admin";
 
-function login(role) {
-  const input = document.getElementById("password").value;
+function initAdmin() {
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-  if (role === "admin" && input === ADMIN_PASSWORD) {
-    localStorage.setItem("role", "admin");
-    window.location.href = "admin-panel.html";
-  } 
-  else if (role === "user" && input === USER_PASSWORD) {
-    localStorage.setItem("role", "user");
-    window.location.href = "index.html";
-  } 
-  else {
+  document.getElementById("loginScreen").style.display = isAdmin ? "none" : "block";
+  document.getElementById("adminScreen").style.display = isAdmin ? "block" : "none";
+}
+
+function loginAdmin() {
+  const pass = document.getElementById("adminPass").value;
+
+  if (pass === ADMIN_PASSWORD) {
+    localStorage.setItem("isAdmin", "true");
+    initAdmin();
+  } else {
     alert("Wrong password 💔");
   }
 }
 
-function checkAdmin() {
-  if (localStorage.getItem("role") !== "admin") {
-    window.location.href = "admin.html";
-  }
-}
-
 function logout() {
-  localStorage.removeItem("role");
-  window.location.href = "admin.html";
+  localStorage.removeItem("isAdmin");
+  initAdmin();
 }
