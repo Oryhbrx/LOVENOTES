@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500&display=swap');
+
+:root {
+  --bg: #fff7f3;
+  --card: #ffffff;
+  --primary: #e88a9a;
+  --primary-soft: #fdecef;
+  --text: #444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 24px;
+}
+
+h1, h2 {
+  font-family: 'Playfair Display', serif;
+  text-align: center;
+}
+
+.heart {
+  text-align: center;
+  font-size: 28px;
+  color: var(--primary);
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button.outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 18px;
+  margin-top: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.05);
+}
+
+.note-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  text-align: center;
+}
+
+.date {
+  font-size: 12px;
+  opacity: .6;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.reply {
+  background: var(--primary-soft);
+  border-radius: 14px;
+  padding: 10px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+textarea {
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid #eee;
+  resize: none;
+  margin-top: 10px;
+}
+
+.send {
+  float: right;
+  margin-top: 10px;
+}
