@@ -31,10 +31,13 @@ loginBtn.onclick = async () => {
 
 addNoteBtn.onclick = async () => {
   const text = noteText.value;
-  await addDoc(collection(db, "notes"), {
-    content: text,
-    archived: false
-  });
+  import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+await addDoc(collection(db, "notes"), {
+  content: text,
+  archived: false,
+  createdAt: serverTimestamp()
+});
   noteText.value = "";
   loadNotes();
 };
