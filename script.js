@@ -1,37 +1,62 @@
+// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-  getAuth, signInWithEmailAndPassword, signOut 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  getFirestore, collection, addDoc, getDocs,
-  updateDoc, deleteDoc, doc, serverTimestamp
+  getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// -------------------
+// 1. FIREBASE CONFIG
+// -------------------
 const firebaseConfig = {
   apiKey: "AIzaSyConAp3gpoCpKv-W5X23qt4ZcvsVdByHys",
   authDomain: "love-notes-for-regine-62c65.firebaseapp.com",
-  projectId: "love-notes-for-regine-62c65"
+  projectId: "love-notes-for-regine-62c65",
+  storageBucket: "love-notes-for-regine-62c65.firebasestorage.app",
+  messagingSenderId: "804540221651",
+  appId: "1:804540221651:web:a2a8fe123bfffe8ebe6c26"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ELEMENTS
+// -------------------
+// 2. ELEMENTS
+// -------------------
 const loginDiv = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
-const viewerNotes = document.getElementById("viewerNotes");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const errorP = document.getElementById("error");
 
-// LOGIN
+const noteText = document.getElementById("noteText");
+const addNoteBtn = document.getElementById("addNote");
+const notesDiv = document.getElementById("notes");
+const archivedDiv = document.getElementById("archivedNotes");
+
+const viewerDiv = document.getElementById("viewerNotes");
+
+// -------------------
+// 3. LOGIN / LOGOUT
+// -------------------
 loginBtn.onclick = async () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
   try {
-    await signInWithEmailAndPassword(auth, email.value, password.value);
+    await signInWithEmailAndPassword(auth, email, password);
+    errorP.innerText = "";
     loginDiv.style.display = "none";
     dashboard.style.display = "block";
     loadNotes();
-  } catch {
-    error.innerText = "Invalid credentials";
+    loadViewer();
+  } catch (err) {
+    console.log(err);
+    errorP.innerText = "Login failed: " + err.message;
   }
 };
 
@@ -41,93 +66,112 @@ logoutBtn.onclick = async () => {
   loginDiv.style.display = "block";
 };
 
-// ADD NOTE
-addNote.onclick = async () => {
+// -------------------
+// 4. ADD NEW NOTE
+// -------------------
+addNoteBtn.onclick = async () => {
+  const text = noteText.value.trim();
+  if (text === "") return;
+
   await addDoc(collection(db, "notes"), {
-    content: noteText.value,
+    content: text,
     archived: false,
     createdAt: serverTimestamp()
   });
+
   noteText.value = "";
   loadNotes();
   loadViewer();
 };
 
-// LOAD ADMIN NOTES
+// -------------------
+// 5. LOAD NOTES FOR ADMIN
+// -------------------
 async function loadNotes() {
   const snap = await getDocs(collection(db, "notes"));
-  notes.innerHTML = "";
-  archivedNotes.innerHTML = "";
+  notesDiv.innerHTML = "";
+  archivedDiv.innerHTML = "";
 
   snap.forEach(docSnap => {
-    const d = docSnap.data();
+    const data = docSnap.data();
+    const id = docSnap.id;
 
-    const card = `
+    const cardHTML = `
       <div class="card">
-        <p>${d.content}</p>
-        <button onclick="archiveNote('${docSnap.id}', ${d.archived})">
-          ${d.archived ? "Unarchive" : "Archive"}
+        <p>${data.content}</p>
+        <button onclick="archiveNote('${id}', ${data.archived})">
+          ${data.archived ? "Unarchive" : "Archive"}
         </button>
-        <button onclick="deleteNote('${docSnap.id}')">Delete</button>
+        <button onclick="deleteNote('${id}')">Delete</button>
       </div>
     `;
 
-    if (d.archived) archivedNotes.innerHTML += card;
-    else notes.innerHTML += card;
+    if (data.archived) archivedDiv.innerHTML += cardHTML;
+    else notesDiv.innerHTML += cardHTML;
   });
 }
 
-// ARCHIVE
-window.archiveNote = async (id, state) => {
-  await updateDoc(doc(db, "notes", id), { archived: !state });
+// -------------------
+// 6. ARCHIVE / DELETE
+// -------------------
+window.archiveNote = async (id, currentState) => {
+  await updateDoc(doc(db, "notes", id), { archived: !currentState });
   loadNotes();
   loadViewer();
 };
 
-// DELETE
 window.deleteNote = async (id) => {
   await deleteDoc(doc(db, "notes", id));
   loadNotes();
   loadViewer();
 };
 
-// VIEWER SIDE
+// -------------------
+// 7. VIEWER PANEL
+// -------------------
 async function loadViewer() {
   const snap = await getDocs(collection(db, "notes"));
-  viewerNotes.innerHTML = "";
+  viewerDiv.innerHTML = "";
 
   snap.forEach(docSnap => {
-    const d = docSnap.data();
-    if (d.archived) return;
+    const data = docSnap.data();
+    const id = docSnap.id;
 
-    viewerNotes.innerHTML += `
+    if (data.archived) return; // skip archived
+
+    viewerDiv.innerHTML += `
       <div class="card">
-        <p>${d.content}</p>
-        <input placeholder="Reply..." id="reply-${docSnap.id}" />
-        <button onclick="sendReply('${docSnap.id}')">Reply</button>
-        <div id="replies-${docSnap.id}"></div>
+        <p>${data.content}</p>
+        <input id="reply-${id}" placeholder="Reply..." />
+        <button onclick="sendReply('${id}')">Reply</button>
+        <div id="replies-${id}"></div>
       </div>
     `;
 
-    loadReplies(docSnap.id);
+    loadReplies(id);
   });
 }
 
-// REPLIES
+// -------------------
+// 8. REPLIES SYSTEM
+// -------------------
 window.sendReply = async (noteId) => {
-  const msg = document.getElementById(`reply-${noteId}`).value;
+  const input = document.getElementById(`reply-${noteId}`);
+  const msg = input.value.trim();
+  if (!msg) return;
+
   await addDoc(collection(db, "notes", noteId, "replies"), {
     message: msg,
     createdAt: serverTimestamp()
   });
-  document.getElementById(`reply-${noteId}`).value = "";
+
+  input.value = "";
   loadReplies(noteId);
 };
 
 async function loadReplies(noteId) {
   const snap = await getDocs(collection(db, "notes", noteId, "replies"));
   const container = document.getElementById(`replies-${noteId}`);
-  if (!container) return;
   container.innerHTML = "";
 
   snap.forEach(r => {
@@ -135,5 +179,7 @@ async function loadReplies(noteId) {
   });
 }
 
-// INITIAL LOAD
+// -------------------
+// 9. INITIAL LOAD
+// -------------------
 loadViewer();
