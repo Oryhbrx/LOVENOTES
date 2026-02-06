@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Love Notes for Regine</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Love Notes for Regine 💖</title>
+  <script type="module" src="/script.js"></script>
 </head>
 <body>
+  <h1>Love Notes 💌</h1>
 
-<div class="container">
-  <h1>Love Notes for Regine 💖</h1>
-  <div id="notes"></div>
-</div>
+  <div id="login">
+    <h2>Admin Login</h2>
+    <input id="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p id="error"></p>
+  </div>
 
-<script>
-  const notes = JSON.parse(localStorage.getItem("notes") || "[]");
-  const container = document.getElementById("notes");
+  <div id="dashboard" style="display:none;">
+    <h2>Create Love Note</h2>
+    <textarea id="noteText"></textarea>
+    <button id="addNote">Add Note</button>
 
-  notes.forEach(note => {
-    container.innerHTML += `
-      <div class="card">
-        <p>${note}</p>
-      </div>
-    `;
-  });
-</script>
-
+    <h3>Notes</h3>
+    <div id="notes"></div>
+  </div>
 </body>
 </html>
