@@ -1,42 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard</title>
+  <title>Admin – Love Notes</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-  <h2>Admin Dashboard</h2>
-  <p style="text-align:center;">Manage your love notes</p>
-<button onclick="logout()">Logout</button>
-  <button style="width:100%;margin-top:10px;">＋ Create New Love Note</button>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:none;">
+  <div class="container">
+    <h2>Admin Login 🔐</h2>
 
-  <div style="display:flex;gap:10px;margin-top:16px;">
-    <button class="outline" style="flex:1;">Active (1)</button>
-    <button class="outline" style="flex:1;">Archived (0)</button>
-  </div>
+    <input
+      id="adminPass"
+      type="password"
+      placeholder="Admin password"
+      style="width:100%;padding:12px;border-radius:12px;border:1px solid #eee"
+    >
 
-  <div class="card">
-    <div class="note-title">Regine Tapado 💖</div>
-    <div class="date">Feb 6, 2026 · 5:10 PM</div>
-
-    <p style="margin-top:10px;">💬 Replies (1)</p>
-
-    <div class="reply">
-      😛 <br>
-      <small>Feb 6, 2026 · 5:10 PM</small>
-    </div>
-
-    <button class="outline" style="margin-top:14px;color:#e06666;border-color:#e06666;">
-      🗑 Delete
+    <button onclick="loginAdmin()" style="width:100%;margin-top:12px;">
+      Login
     </button>
-    <script src="auth.js"></script>
-<script>
-  checkAdmin();
-</script>
   </div>
 </div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminScreen" style="display:none;">
+  <div class="container">
+    <h2>Admin Dashboard</h2>
+
+    <textarea id="newNote" placeholder="Write new love note..."
+      style="width:100%;padding:12px;border-radius:12px;border:1px solid #eee"></textarea>
+
+    <button onclick="addNote()" style="width:100%;margin-top:10px;">
+      Add New Note
+    </button>
+
+    <div id="notes"></div>
+
+    <button onclick="logout()" style="margin-top:20px;">Logout</button>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+
+<script>
+  initAdmin();
+
+  let notes = JSON.parse(localStorage.getItem("notes") || "[]");
+
+  function renderNotes() {
+    const container = document.getElementById("notes");
+    container.innerHTML = "";
+
+    notes.forEach((note, i) => {
+      container.innerHTML += `
+        <div class="card">
+          <p>${note}</p>
+          <button onclick="deleteNote(${i})">Delete</button>
+        </div>
+      `;
+    });
+  }
+
+  function addNote() {
+    const text = document.getElementById("newNote").value.trim();
+    if (!text) return;
+
+    notes.unshift(text);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    document.getElementById("newNote").value = "";
+    renderNotes();
+  }
+
+  function deleteNote(i) {
+    notes.splice(i, 1);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    renderNotes();
+  }
+
+  renderNotes();
+</script>
 
 </body>
 </html>
