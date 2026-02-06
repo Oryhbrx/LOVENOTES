@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Love Notes ❤️</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Merriweather:wght@400;700&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('Service Worker Registered ✅'))
+    .catch(err => console.log('SW registration failed:', err));
+}
+</script>
+
+<style>
+body { font-family: 'Quicksand', sans-serif; background: #fff5f8; color: #333; max-width: 600px; margin:auto; padding:20px; }
+h1 { text-align:center; color:#e07a91; font-weight:600; margin-bottom:30px; }
+
+.note { background:#ffeef3; border-radius:15px; padding:20px 25px; margin:20px 0; box-shadow:0 6px 10px rgba(224,122,145,0.15); transition: transform 0.3s, opacity 0.8s; opacity:0; animation:fadeInSlide 0.8s forwards; }
+.note.new { animation: heartbeatEnvelope 1s ease; }
+
+@keyframes fadeInSlide { from {opacity:0; transform: translateY(-20px);} to {opacity:1; transform: translateY(0);} }
+@keyframes heartbeatEnvelope { 0% {transform:scale(1) translateY(-20px);} 25% {transform:scale(1.05) translateY(0);} 50% {transform:scale(1.1) translateY(-5px);} 75% {transform:scale(1.05) translateY(0);} 100% {transform:scale(1) translateY(0);} }
+
+.note div:first-child { font-family: 'Playfair Display', serif; font-size:1.15em; line-height:1.5em; color:#333; }
+.replies { font-family:'Merriweather', serif; font-size:1em; color:#555; padding-left:15px; margin-top:8px; }
+input { width:100%; padding:10px; border-radius:10px; border:1px solid #ffd9e2; margin-top:8px; font-size:1em; box-sizing:border-box; }
+button { margin-top:5px; padding:8px 18px; border-radius:10px; border:none; background:#e07a91; color:white; font-weight:600; cursor:pointer; transition: background 0.2s; }
+button:hover { background:#d66a7e; }
+
+/* Scrollable archive styles */
+#archiveTitle { text-align:center; color:#e07a91; margin-top:40px; font-weight:600; }
+#archiveContainer { display:flex; overflow-x:auto; gap:15px; padding:15px 0; }
+.archive-card { min-width:250px; background:#fff0f0; border-radius:15px; padding:15px; box-shadow:0 4px 8px rgba(224,122,145,0.15); font-family:'Playfair Display', serif; font-size:1em; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<h1>Daily Love Notes ❤️</h1>
+
+<div id="notesContainer"></div>
+
+<h2 id="archiveTitle">📖 Past Love Notes</h2>
+<div id="archiveContainer"></div>
+
+<script>
+// ===== DATA & LOCAL STORAGE =====
+let notes = JSON.parse(localStorage.getItem('notes')) || [];
+let archive = JSON.parse(localStorage.getItem('archive')) || [];
+let lastNoteTime = localStorage.getItem('lastNoteAdded') || 0;
+
+// Ask for notification permission
+if ('Notification' in window) Notification.requestPermission();
+
+// ===== SAVE NOTES =====
+function saveData() {
+  localStorage.setItem('notes', JSON.stringify(notes));
+  localStorage.setItem('archive', JSON.stringify(archive));
+}
+
+// ===== CHECK ARCHIVE =====
+function checkArchive() {
+  const now = new Date().getTime();
+  for(let i=notes.length-1;i>=0;i--){
+    const noteTime = new Date(notes[i].created_at).getTime();
+    if(now - noteTime > 24*60*60*1000){ // older than 24h
+      archive.push(notes[i]);
+      notes.splice(i,1);
+    }
+  }
+  saveData();
+}
+
+// ===== DISPLAY NOTES =====
+function displayNotes() {
+  checkArchive();
+
+  // Current notes
+  const container = document.getElementById('notesContainer');
+  container.innerHTML = '';
+  notes.forEach((note,index)=>{
+    const noteDiv = document.createElement('div');
+    noteDiv.className = 'note';
+    if(!note.displayed){
+      noteDiv.classList.add('new');
+      note.displayed = true;
+      saveData();
+      if(Notification.permission === "granted"){
+        new Notification("💌 New Love Note!", { body: note.message, icon:"https://cdn-icons-png.flaticon.com/512/616/616408.png" });
+      }
+    }
+    noteDiv.innerHTML = `
+      <div>${note.message}</div>
+      <div class="replies">
+        ${note.replies?.map(r=>`- ${r}`).join('<br>') || ''}
+        <br>
+        <input type="text" id="replyInput${index}" placeholder="Reply...">
+        <button onclick="addReply(${index})">Send</button>
+      </div>
+    `;
+    container.appendChild(noteDiv);
+  });
+
+  // Archive notes
+  const archiveContainer = document.getElementById('archiveContainer');
+  archiveContainer.innerHTML = '';
+  archive.forEach(note=>{
+    const card = document.createElement('div');
+    card.className = 'archive-card';
+    card.textContent = note.message;
+    archiveContainer.appendChild(card);
+  });
+}
+
+// ===== ADD REPLY =====
+function addReply(index){
+  const input = document.getElementById(`replyInput${index}`);
+  const text = input.value.trim();
+  if(text){
+    notes[index].replies = notes[index].replies || [];
+    notes[index].replies.push(text);
+    input.value = '';
+    saveData();
+    displayNotes();
+  }
+}
+
+// ===== INSTANT NOTIFICATION DETECTION =====
+setInterval(()=>{
+  const lastAdded = localStorage.getItem('lastNoteAdded');
+  if(lastAdded && lastAdded > lastNoteTime){
+    lastNoteTime = lastAdded;
+    displayNotes();
+  }
+}, 2000);
+
+// ===== DAILY 9AM REMINDER =====
+function scheduleDailyReminder(){
+  if('Notification' in window && Notification.permission === 'granted'){
+    const now = new Date();
+    const next9AM = new Date();
+    next9AM.setHours(9,0,0,0);
+    if(now > next9AM) next9AM.setDate(next9AM.getDate() + 1);
+    const timeout = next9AM - now;
+
+    setTimeout(()=>{
+      new Notification("💌 Daily Love Reminder", {
+        body: "Check your love notes for today!",
+        icon: "https://cdn-icons-png.flaticon.com/512/616/616408.png"
+      });
+      scheduleDailyReminder(); // reschedule for next day
+    }, timeout);
+  }
+}
+
+// INITIALIZE
+displayNotes();
+scheduleDailyReminder();
+</script>
+
+</body>
+</html>
