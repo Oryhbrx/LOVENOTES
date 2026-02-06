@@ -7,29 +7,22 @@
 <body>
 
 <div class="container">
-  <div class="heart">♡</div>
-  <h1>Love Notes for Regine</h1>
-  <p style="text-align:center;">Your daily reminder ❤️</p>
-
-  <div style="text-align:center;">
-    <button class="outline">Enable Notifications</button>
-  </div>
-
-  <div class="card">
-    <div class="note-title">Regine Tapado 💖</div>
-    <div class="date">Friday, February 6, 2026 at 5:10 PM</div>
-
-    <div class="reply">
-      😛 <br>
-      <small>Feb 6, 2026 · 5:10 PM</small>
-    </div>
-
-    <textarea placeholder="Write your reply..."></textarea>
-    <button class="send">➤</button>
-  </div>
-
-  <p style="text-align:center;opacity:.4;margin-top:40px;">Admin Login</p>
+  <h1>Love Notes for Regine 💖</h1>
+  <div id="notes"></div>
 </div>
+
+<script>
+  const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+  const container = document.getElementById("notes");
+
+  notes.forEach(note => {
+    container.innerHTML += `
+      <div class="card">
+        <p>${note}</p>
+      </div>
+    `;
+  });
+</script>
 
 </body>
 </html>
